@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <style>
+        /* General Reset */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            flex-direction: column;
+            /* Stack elements vertically */
+            overflow: hidden;
+            /* Prevent scrolling */
+        }
+
+        /* Background video */
+        #backgroundVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Cover the entire screen */
+            z-index: -1;
+            /* Place behind other elements */
+        }
+
+        /* Game Container */
+        #game {
+            position: relative;
+            z-index: 1;
+            /* Place on top of the video */
+        }
+
+        /* Game Grid */
+        .grid {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+        }
+
+        /* Cards */
+        .card {
+            position: relative;
+            transition: all .4s linear;
+            transform-style: preserve-3d;
+            margin: 5px;
+            width: 150px;
+            height: 150px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card .front,
+        .card .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+
+        .card .front {
+            background: url('https://media.istockphoto.com/id/1488184544/photo/neon-purple-brick-wall-texture-for-pattern-background-abstract-architectural-wide-panorama.jpg?s=612x612&w=0&k=20&c=uJ4tx6H0GiTZGJqg-gwd-f-xdr9zXdKYErm6Uklgnbs=') no-repeat center center / cover;
+            border-radius: 20px;
+        }
+
+        .card .back {
+            transform: rotateY(180deg);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
+        .selected {
+            transform: rotateY(180deg);
+        }
+
+        /* Buttons */
+        .button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            /* Remove underline from links */
+        }
+
+        .BTN {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+        }
+
+        .menu-button {
+            background: linear-gradient(135deg, #2f46c5, #02142e);
+        }
+
+        /* Move count and reset button styling */
+        .reset-button, #moveCountDisplay {
+          padding: 10px 20px;
+      font-size: 1rem;
+            background: linear-gradient(135deg, #2f46c5, #02142e);
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px;
+            border: none;
+        }
+
+        /* Move count display */
+        #moveCountDisplay {
+          padding: 10px 20px;
+      font-size: 1rem;
+            color: white;
+            
+        }
+
+            .sound-button {
+      background: linear-gradient(135deg, #02142e, #2f46c5);
+      color: white;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+    }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background video element -->
+    <video id="backgroundVideo" autoplay loop muted>
+        <source src="IMAGES/bf03357633894926afd3dc6d00182260_preview.mp4" type="video/mp4">
+        <!-- Replace with your video file -->
+    </video>
+
+    <div id="game">
+        <div class="BTN">
+            <div class="buttons">
+                <a href="INDEX1.HTML"><button class="button menu-button">Menu</button></a>
+            </div>
+            <!-- Reset Button -->
+            <button class="reset-button" id="resetButton">Reset</button>
+            <div class="button-container">
+              <button onclick="toggleSound()" class="sound-button" id="soundButton" aria-label="Toggle sound">Sound:
+                Off</button>
+            </div>
+            <audio id="buttonSound" src="virtual-memory-uplifting-gaming-synthwave-199942.mp3" loop></audio>
+            <!-- Move Count Display -->
+            <div id="moveCountDisplay">Moves: 0</div>
+          </div>
+        </div>
+        <!-- Game grid will be created here -->
+        <section class="grid"></section>
+    </div>
+
+    <script>
+        'use strict';
+
+        // Array of card objects
+        const cardsArray = [
+            { 'name': 'FACEBOOK', 'img': 'IMAGES/facebook.svg' },
+            { 'name': 'LINKEDIN', 'img': 'IMAGES/linkedin.svg' },
+            { 'name': 'PINTEREST', 'img': 'IMAGES/pinterest.svg' },
+            { 'name': 'SKYPE', 'img': 'IMAGES/skype.svg' },
+            { 'name': 'SNAPCHAT', 'img': 'IMAGES/snapchat.svg' },
+            { 'name': 'TWITTER', 'img': 'IMAGES/twitter.svg' },
+            { 'name': 'WHATSAPP', 'img': 'IMAGES/whatsapp.svg' },
+            { 'name': 'YOUTUBE', 'img': 'IMAGES/youtube.svg' },
+            { 'name': 'YAHOO', 'img': 'IMAGES/yahoo.svg' }
+        ];
+
+        // Create the game grid by duplicating and shuffling the cards
+        let gameGrid = [];
+        let firstGuess = '';
+        let secondGuess = '';
+        let count = 0;
+        let previousTarget = null;
+        let moveCount = 0;
+        const delay = 1200;
+
+        const grid = document.querySelector('.grid');
+        const moveCountDisplay = document.getElementById('moveCountDisplay');
+        const resetButton = document.getElementById('resetButton');
+
+        const initializeGame = () => {
+            grid.innerHTML = ''; // Clear the grid
+            gameGrid = cardsArray.concat(cardsArray).sort(() => 0.5 - Math.random());
+            moveCount = 0;
+            moveCountDisplay.textContent = `Moves: ${moveCount}`;
+            firstGuess = '';
+            secondGuess = '';
+            count = 0;
+            previousTarget = null;
+
+            // Create card elements in the grid
+            gameGrid.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.name = item.name;
+
+                const front = document.createElement('div');
+                front.classList.add('front');
+
+                const back = document.createElement('div');
+                back.classList.add('back');
+                back.style.backgroundImage = `url(${item.img})`;
+
+                grid.appendChild(card);
+                card.appendChild(front);
+                card.appendChild(back);
+            });
+        };
+
+        // Function to handle matched cards
+        const match = () => {
+            const selected = document.querySelectorAll('.selected');
+            selected.forEach(card => {
+                card.classList.add('match');
+                card.style.visibility = 'hidden'; // Hide matched cards but keep space
+            });
+        };
+
+        // Function to reset guesses
+        const resetGuesses = () => {
+            firstGuess = '';
+            secondGuess = '';
+            count = 0;
+            previousTarget = null;
+
+            const selected = document.querySelectorAll('.selected');
+            selected.forEach(card => {
+                card.classList.remove('selected');
+            });
+        };
+
+        // Event listener for card clicks
+        grid.addEventListener('click', event => {
+            const clicked = event.target;
+
+            // Prevent invalid clicks
+            if (
+                clicked.nodeName === 'SECTION' ||
+                clicked === previousTarget ||
+                clicked.parentNode.classList.contains('selected') ||
+                clicked.parentNode.classList.contains('match')
+            ) {
+                return;
+            }
+
+            if (count < 2) {
+                count++;
+                moveCount++; // Increment move count on every card selection
+                moveCountDisplay.textContent = `Moves: ${moveCount}`; // Update move count display
+                if (count === 1) {
+                    firstGuess = clicked.parentNode.dataset.name;
+                    clicked.parentNode.classList.add('selected');
+                } else {
+                    secondGuess = clicked.parentNode.dataset.name;
+                    clicked.parentNode.classList.add('selected');
+                }
+
+                // Check for a match
+                if (firstGuess && secondGuess) {
+                    if (firstGuess === secondGuess) {
+                        setTimeout(match, delay);
+                    }
+                    setTimeout(resetGuesses, delay);
+                }
+                previousTarget = clicked;
+            }
+        });
+
+        // Add functionality to reset button
+        resetButton.addEventListener('click', () => {
+            initializeGame(); // Reset and initialize the game
+        });
+
+        // Initialize the game when the page loads
+        initializeGame();
+        let soundOn = false; // Sound is initially off
+    const buttonSound = document.getElementById("buttonSound");
+
+    function toggleSound() {
+      soundOn = !soundOn; // Toggle sound state
+      const soundButton = document.getElementById("soundButton");
+      soundButton.textContent = soundOn ? "Sound: On" : "Sound: Off"; // Update button text
+
+      // Play or pause sound based on the state
+      if (soundOn) {
+        buttonSound.play().catch(error => {
+          console.error("Error playing sound:", error);
+        });
+      } else {
+        buttonSound.pause(); // Pause if sound is turned off
+        buttonSound.currentTime = 0; // Reset sound to the beginning
+      }
+    }
+
+    // Play sound when the play button is clicked and navigate to the game page
+    const playButton = document.getElementById('playButton');
+    playButton.addEventListener('click', (event) => {
+      event.preventDefault(); // Prevent default anchor behavior if necessary
+      if (soundOn) {
+        buttonSound.play().catch(error => {
+          console.error("Error playing sound:", error);
+        });
+      }
+      // Navigate to the game page after a short delay to allow sound to play
+      setTimeout(() => {
+        window.location.href = 'index.html'; // Navigate to index.html
+      }, 500); // Adjust delay as needed
+    });
+    </script>
+
+</body>
+
+</html>
