@@ -107,17 +107,17 @@
         .BTN {
             display: flex;
             justify-content: space-between;
-            align-items: center; 
+            align-items: center;
         }
 
         .menu-button {
             background: linear-gradient(135deg, #2f46c5, #02142e);
         }
 
-        /* Move count and reset button styling */
-        .reset-button, #moveCountDisplay {
-          padding: 10px 20px;
-      font-size: 1rem;
+        /* Timer button styling */
+        .timer-button {
+            padding: 10px 20px;
+            font-size: 1rem;
             background: linear-gradient(135deg, #2f46c5, #02142e);
             color: white;
             border-radius: 5px;
@@ -127,36 +127,42 @@
             border: none;
         }
 
-        /* Move count display */
-        #moveCountDisplay {
-          padding: 10px 20px;
-      font-size: 1rem;
+        .sound-button {
+            background: linear-gradient(135deg, #02142e, #2f46c5);
             color: white;
-            
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
         }
-
-            .sound-button {
-      background: linear-gradient(135deg, #02142e, #2f46c5);
-      color: white;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 10px;
-      color: white;
-      text-align: center;
-      text-decoration: none;
-    }
+       
+        #resetButton{
+                background: linear-gradient(135deg, #02142e, #2f46c5);
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+        }
+     
     </style>
 </head>
 
 <body>
 
-    <!-- Background video element -->
     <video id="backgroundVideo" autoplay loop muted>
         <source src="IMAGES/bf03357633894926afd3dc6d00182260_preview.mp4" type="video/mp4">
-        <!-- Replace with your video file -->
+        
     </video>
 
     <div id="game">
@@ -167,17 +173,15 @@
             <!-- Reset Button -->
             <button class="reset-button" id="resetButton">Reset</button>
             <div class="button-container">
-              <button onclick="toggleSound()" class="sound-button" id="soundButton" aria-label="Toggle sound">Sound:
-                Off</button>
+                <button onclick="toggleSound()" class="sound-button" id="soundButton" aria-label="Toggle sound">Sound: Off</button>
             </div>
             <audio id="buttonSound" src="virtual-memory-uplifting-gaming-synthwave-199942.mp3" loop></audio>
-            <!-- Move Count Display -->
-            <div id="moveCountDisplay">Moves: 0</div>
-          </div>
+            <!-- Timer Button -->
+            <div id="timerButton" class="timer-button">Timer: 20</div>
         </div>
-        <!-- Game grid will be created here -->
-        <section class="grid"></section>
     </div>
+
+    <section class="grid"></section>
 
     <script>
         'use strict';
@@ -195,30 +199,30 @@
             { 'name': 'YAHOO', 'img': 'IMAGES/yahoo.svg' }
         ];
 
-        // Create the game grid by duplicating and shuffling the cards
+        //  duplicating and shuffling the cards
         let gameGrid = [];
         let firstGuess = '';
         let secondGuess = '';
         let count = 0;
         let previousTarget = null;
         let moveCount = 0;
+        let timeRemaining = 20;
+        let timerInterval;
         const delay = 1200;
 
         const grid = document.querySelector('.grid');
-        const moveCountDisplay = document.getElementById('moveCountDisplay');
         const resetButton = document.getElementById('resetButton');
+        const timerButton = document.getElementById('timerButton');
 
         const initializeGame = () => {
-            grid.innerHTML = ''; // Clear the grid
+            grid.innerHTML = ''; 
             gameGrid = cardsArray.concat(cardsArray).sort(() => 0.5 - Math.random());
-            moveCount = 0;
-            moveCountDisplay.textContent = `Moves: ${moveCount}`;
             firstGuess = '';
             secondGuess = '';
             count = 0;
             previousTarget = null;
 
-            // Create card elements in the grid
+            // Creating  card  to the  grid
             gameGrid.forEach(item => {
                 const card = document.createElement('div');
                 card.classList.add('card');
@@ -235,48 +239,52 @@
                 card.appendChild(front);
                 card.appendChild(back);
             });
+
+            startTimer();
+        };
+
+        // Timer function
+        const startTimer = () => {
+            timeRemaining = 60; // Reset to 20 seconds
+            timerButton.textContent = `Timer: ${timeRemaining}`;
+
+            if (timerInterval) {
+                clearInterval(timerInterval); // Clear any existing interval
+            }
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                timerButton.textContent = `Timer: ${timeRemaining}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Time\'s up! Game Over.');
+                    initializeGame(); // Reset the game when time's up
+                }
+            }, 1000);
         };
 
         // Function to handle matched cards
         const match = () => {
-            const selected = document.querySelectorAll('.selected');
-            selected.forEach(card => {
+            const selectedCards = document.querySelectorAll('.selected');
+            selectedCards.forEach(card => {
                 card.classList.add('match');
-                card.style.visibility = 'hidden'; // Hide matched cards but keep space
-            });
-        };
-
-        // Function to reset guesses
-        const resetGuesses = () => {
-            firstGuess = '';
-            secondGuess = '';
-            count = 0;
-            previousTarget = null;
-
-            const selected = document.querySelectorAll('.selected');
-            selected.forEach(card => {
                 card.classList.remove('selected');
             });
         };
 
-        // Event listener for card clicks
+        // Reset the game
+        resetButton.addEventListener('click', initializeGame);
+
+        // Main game logic
         grid.addEventListener('click', event => {
             const clicked = event.target;
-
-            // Prevent invalid clicks
-            if (
-                clicked.nodeName === 'SECTION' ||
-                clicked === previousTarget ||
-                clicked.parentNode.classList.contains('selected') ||
-                clicked.parentNode.classList.contains('match')
-            ) {
+            if (clicked.nodeName === 'SECTION' || clicked === previousTarget || clicked.parentNode.classList.contains('match') || clicked.parentNode.classList.contains('selected')) {
                 return;
             }
 
             if (count < 2) {
                 count++;
-                moveCount++; // Increment move count on every card selection
-                moveCountDisplay.textContent = `Moves: ${moveCount}`; // Update move count display
                 if (count === 1) {
                     firstGuess = clicked.parentNode.dataset.name;
                     clicked.parentNode.classList.add('selected');
@@ -285,7 +293,6 @@
                     clicked.parentNode.classList.add('selected');
                 }
 
-                // Check for a match
                 if (firstGuess && secondGuess) {
                     if (firstGuess === secondGuess) {
                         setTimeout(match, delay);
@@ -296,46 +303,20 @@
             }
         });
 
-        // Add functionality to reset button
-        resetButton.addEventListener('click', () => {
-            initializeGame(); // Reset and initialize the game
-        });
+        // Reset guesses after each turn
+        const resetGuesses = () => {
+            firstGuess = '';
+            secondGuess = '';
+            count = 0;
 
-        // Initialize the game when the page loads
-        initializeGame();
-        let soundOn = false; // Sound is initially off
-    const buttonSound = document.getElementById("buttonSound");
+            const selectedCards = document.querySelectorAll('.selected');
+            selectedCards.forEach(card => {
+                card.classList.remove('selected');
+            });
+        };
 
-    function toggleSound() {
-      soundOn = !soundOn; // Toggle sound state
-      const soundButton = document.getElementById("soundButton");
-      soundButton.textContent = soundOn ? "Sound: On" : "Sound: Off"; // Update button text
-
-      // Play or pause sound based on the state
-      if (soundOn) {
-        buttonSound.play().catch(error => {
-          console.error("Error playing sound:", error);
-        });
-      } else {
-        buttonSound.pause(); // Pause if sound is turned off
-        buttonSound.currentTime = 0; // Reset sound to the beginning
-      }
-    }
-
-    // Play sound when the play button is clicked and navigate to the game page
-    const playButton = document.getElementById('playButton');
-    playButton.addEventListener('click', (event) => {
-      event.preventDefault(); // Prevent default anchor behavior if necessary
-      if (soundOn) {
-        buttonSound.play().catch(error => {
-          console.error("Error playing sound:", error);
-        });
-      }
-      // Navigate to the game page after a short delay to allow sound to play
-      setTimeout(() => {
-        window.location.href = 'index.html'; // Navigate to index.html
-      }, 500); // Adjust delay as needed
-    });
+        // Initialize the game on page load
+        window.addEventListener('load', initializeGame);
     </script>
 
 </body>
