@@ -202,147 +202,141 @@
     <audio id="buttonSound" src="virtual-memory-uplifting-gaming-synthwave-199942.mp3"></audio>
 
     <script>
-        'use strict';
+'use strict';
 
-        const cardsArray = [
-            { 'name': 'FACEBOOK', 'img': 'IMAGES/facebook.svg' },
-            { 'name': 'LINKEDIN', 'img': 'IMAGES/linkedin.svg' },
-            { 'name': 'PINTEREST', 'img': 'IMAGES/pinterest.svg' },
-            { 'name': 'SKYPE', 'img': 'IMAGES/skype.svg' },
-            { 'name': 'SNAPCHAT', 'img': 'IMAGES/snapchat.svg' },
-            { 'name': 'TWITTER', 'img': 'IMAGES/twitter.svg' },
-            { 'name': 'WHATSAPP', 'img': 'IMAGES/whatsapp.svg' },
-            { 'name': 'YOUTUBE', 'img': 'IMAGES/youtube.svg' },
-            { 'name': 'YAHOO', 'img': 'IMAGES/yahoo.svg' }
-        ];
+const cardsArray = [
+    { 'name': 'FACEBOOK', 'img': 'IMAGES/facebook.svg' },
+    { 'name': 'LINKEDIN', 'img': 'IMAGES/linkedin.svg' },
+    { 'name': 'PINTEREST', 'img': 'IMAGES/pinterest.svg' },
+    { 'name': 'SKYPE', 'img': 'IMAGES/skype.svg' },
+    { 'name': 'SNAPCHAT', 'img': 'IMAGES/snapchat.svg' },
+    { 'name': 'TWITTER', 'img': 'IMAGES/twitter.svg' },
+    { 'name': 'WHATSAPP', 'img': 'IMAGES/whatsapp.svg' },
+    { 'name': 'YOUTUBE', 'img': 'IMAGES/youtube.svg' },
+    { 'name': 'YAHOO', 'img': 'IMAGES/yahoo.svg' }
+];
 
-        let gameGrid = [];
-        let firstGuess = '';
-        let secondGuess = '';
-        let count = 0;
-        let previousTarget = null;
-        let movesRemaining = 30; // Default for easy level
-        let pairs = 6; // Default for easy level
-        const delay = 1200;
+const DIFFICULTY_SETTINGS = {
+    easy: { pairs: 4, moves: 30 },
+    medium: { pairs: 8, moves: 40 },
+    hard: { pairs: 10, moves: 50 }
+};
 
-        const grid = document.querySelector('.grid');
-        const resetButton = document.getElementById('resetButton');
-        const movesButton = document.getElementById('movesButton');
-        const levelsDropdown = document.getElementById('levels');
-        const buttonSound = document.getElementById("buttonSound");
-        const soundButton = document.getElementById("soundButton");
+let gameGrid = [];
+let firstGuess = '';
+let secondGuess = '';
+let count = 0;
+let previousTarget = null;
+let movesRemaining = 0;
+const delay = 1200;
 
-        const initializeGame = () => {
-            grid.innerHTML = '';
-            gameGrid = cardsArray.slice(0, pairs).concat(cardsArray.slice(0, pairs)).sort(() => 0.5 - Math.random());
-            firstGuess = '';
-            secondGuess = '';
-            count = 0;
-            previousTarget = null;
+const grid = document.querySelector('.grid');
+const resetButton = document.getElementById('resetButton');
+const movesButton = document.getElementById('movesButton');
+const levelsDropdown = document.getElementById('levels');
+const buttonSound = document.getElementById("buttonSound");
+const soundButton = document.getElementById("soundButton");
 
-            // Reset moves based on selected level
-            if (levelsDropdown.value === 'easy') {
-                pairs = 4;
-                movesRemaining = 30;
-            } else if (levelsDropdown.value === 'medium') {
-                pairs = 8;
-                movesRemaining = 40;
-            } else if (levelsDropdown.value === 'hard') {
-                pairs = 10;
-                movesRemaining = 50;
-            }
+const initializeGame = () => {
+    grid.innerHTML = '';
+    count = 0;
+    previousTarget = null;
 
-            updateMovesDisplay();
+    const selectedLevel = levelsDropdown.value;
+    const { pairs, moves } = DIFFICULTY_SETTINGS[selectedLevel];
 
-            gameGrid.forEach(item => {
-                const card = document.createElement('div');
-                card.classList.add('card');
-                card.dataset.name = item.name;
+    movesRemaining = moves;
+    gameGrid = cardsArray.slice(0, pairs).concat(cardsArray.slice(0, pairs)).sort(() => 0.5 - Math.random());
 
-                const front = document.createElement('div');
-                front.classList.add('front');
+    updateMovesDisplay();
 
-                const back = document.createElement('div');
-                back.classList.add('back');
-                back.style.backgroundImage = `url(${item.img})`;
+    gameGrid.forEach(item => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.name = item.name;
 
-                grid.appendChild(card);
-                card.appendChild(front);
-                card.appendChild(back);
-            });
-        };
+        const front = document.createElement('div');
+        front.classList.add('front');
 
-        const updateMovesDisplay = () => {
-            movesButton.textContent = `Moves: ${movesRemaining}`;
-        };
+        const back = document.createElement('div');
+        back.classList.add('back');
+        back.style.backgroundImage = `url(${item.img})`;
 
-        const matchCards = () => {
-            const selected = document.querySelectorAll('.selected');
-            selected.forEach(card => {
-                card.classList.add('match');
-            });
-        };
+        grid.appendChild(card);
+        card.appendChild(front);
+        card.appendChild(back);
+    });
+};
 
-        const resetGuesses = () => {
-            firstGuess = '';
-            secondGuess = '';
-            count = 0;
-            previousTarget = null;
+const updateMovesDisplay = () => {
+    movesButton.textContent = `Moves: ${movesRemaining}`;
+};
 
-            const selected = document.querySelectorAll('.selected');
-            selected.forEach(card => {
-                card.classList.remove('selected');
-            });
-        };
+const matchCards = () => {
+    const selected = document.querySelectorAll('.selected');
+    selected.forEach(card => {
+        card.classList.add('match');
+    });
+};
 
-        grid.addEventListener('click', event => {
-            const clicked = event.target;
-            if (clicked.nodeName === 'SECTION' || clicked === previousTarget || clicked.parentNode.classList.contains('selected') || clicked.parentNode.classList.contains('match')) {
-                return;
-            }
+const resetGuesses = () => {
+    firstGuess = '';
+    secondGuess = '';
+    count = 0;
+    previousTarget = null;
 
-            if (count < 2) {
-                count++;
-                if (count === 1) {
-                    firstGuess = clicked.parentNode.dataset.name;
-                    clicked.parentNode.classList.add('selected');
-                } else {
-                    secondGuess = clicked.parentNode.dataset.name;
-                    clicked.parentNode.classList.add('selected');
-                }
+    const selected = document.querySelectorAll('.selected');
+    selected.forEach(card => {
+        card.classList.remove('selected');
+    });
+};
 
-                if (firstGuess && secondGuess) {
-                    if (firstGuess === secondGuess) {
-                        setTimeout(matchCards, delay);
-                    }
-                    setTimeout(resetGuesses, delay);
-                }
+const handleCardClick = (clicked) => {
+    if (clicked.nodeName === 'SECTION' || clicked === previousTarget || clicked.parentNode.classList.contains('selected') || clicked.parentNode.classList.contains('match')) {
+        return;
+    }
 
-                previousTarget = clicked;
-                movesRemaining--;
-                updateMovesDisplay();
-            }
+    count++;
+    if (count === 1) {
+        firstGuess = clicked.parentNode.dataset.name;
+        clicked.parentNode.classList.add('selected');
+    } else {
+        secondGuess = clicked.parentNode.dataset.name;
+        clicked.parentNode.classList.add('selected');
+        if (firstGuess === secondGuess) {
+            setTimeout(matchCards, delay);
+        }
+        setTimeout(resetGuesses, delay);
+    }
 
-            if (movesRemaining === 0) {
-                alert('Game over!');
-            }
-        });
+    previousTarget = clicked;
+    movesRemaining--;
+    updateMovesDisplay();
 
-        resetButton.addEventListener('click', initializeGame);
-
-        levelsDropdown.addEventListener('change', initializeGame);
-
-        soundButton.addEventListener('click', () => {
-            if (buttonSound.paused) {
-                buttonSound.play();
-                soundButton.textContent = 'Sound: On';
-            } else {
-                buttonSound.pause();
-                soundButton.textContent = 'Sound: Off';
-            }
-        });
-
+    if (movesRemaining === 0) {
+        alert('Game over! Resetting the game.');
         initializeGame();
+    }
+};
+
+grid.addEventListener('click', event => handleCardClick(event.target));
+
+resetButton.addEventListener('click', initializeGame);
+
+levelsDropdown.addEventListener('change', initializeGame);
+
+soundButton.addEventListener('click', () => {
+    if (buttonSound.paused) {
+        buttonSound.play();
+        soundButton.textContent = 'Sound: On';
+    } else {
+        buttonSound.pause();
+        soundButton.textContent = 'Sound: Off';
+    }
+});
+
+initializeGame();
+
     </script>
 </body>
 
