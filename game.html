@@ -8,166 +8,102 @@
     <style>
         /* General Reset */
         * {
-            box-sizing: border-box;
-        }
+    box-sizing: border-box;
+}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            position: relative;
-            flex-direction: column;
-            overflow: hidden;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
 
-        /* Background video */
-        #backgroundVideo {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-        }
+#backgroundVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+}
 
-        /* Game Container */
-        #game {
-            position: relative;
-            z-index: 1;
-        }
+#game {
+    position: relative;
+    z-index: 1;
+}
 
-        /* Game Grid */
-        .grid {
-            max-width: 960px;
-            margin: 0 auto;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-        }
+/* Game Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+}
 
-        /* Cards */
-        .card {
-            position: relative;
-            transition: all .4s linear;
-            transform-style: preserve-3d;
-            margin: 5px;
-            width: 150px;
-            height: 150px;
-            perspective: 1000px;
-            cursor: pointer;
-        }
+.card {
+    width: 150px;
+    height: 150px;
+    position: relative;
+    perspective: 1000px;
+    cursor: pointer;
+    transition: all 0.4s linear;
+    transform-style: preserve-3d;
+}
 
-        .card .front,
-        .card .back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-        }
+.front, .back {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    backface-visibility: hidden;
+}
 
-        .card .front {
-            background: url('https://media.istockphoto.com/id/1488184544/photo/neon-purple-brick-wall-texture-for-pattern-background-abstract-architectural-wide-panorama.jpg?s=612x612&w=0&k=20&c=uJ4tx6H0GiTZGJqg-gwd-f-xdr9zXdKYErm6Uklgnbs=') no-repeat center center / cover;
-            border-radius: 20px;
-        }
+.front {
+    background: url('https://media.istockphoto.com/id/1488184544/photo/neon-purple-brick-wall-texture-for-pattern-background-abstract-architectural-wide-panorama.jpg?s=612x612&w=0&k=20&c=uJ4tx6H0GiTZGJqg-gwd-f-xdr9zXdKYErm6Uklgnbs=') no-repeat center center / cover;
+    border-radius: 20px;
+}
 
-        .card .back {
-            transform: rotateY(180deg);
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center center;
-        }
+.back {
+    transform: rotateY(180deg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
 
-        .selected {
-            transform: rotateY(180deg);
-        }
+.selected {
+    transform: rotateY(180deg);
+}
 
-        /* Hide matched cards */
-        .match {
-            visibility: hidden;
-        }
+.match {
+    visibility: hidden;
+}
 
-        /* Buttons */
-        .button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-        }
+/* Buttons */
+.button, #resetButton, #levels, .timer-button, .sound-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+    color: white;
+    background: linear-gradient(135deg, #02142e, #2f46c5);
+    text-align: center;
+    text-decoration: none;
+}
 
-        .BTN {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+option {
+    background-color: #02142e;
+}
 
-        .menu-button {
-            background: linear-gradient(135deg, #2f46c5, #02142e);
-        }
-
-        .timer-button {
-            padding: 10px 20px;
-            font-size: 1rem;
-            background: linear-gradient(135deg, #2f46c5, #02142e);
-            color: white;
-            border-radius: 5px;
-            text-align: center;
-            cursor: pointer;
-            margin: 10px;
-            border: none;
-        }
-
-        .sound-button {
-            background: linear-gradient(135deg, #02142e, #2f46c5);
-            color: white;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        #resetButton {
-            background: linear-gradient(135deg, #02142e, #2f46c5);
-            color: white;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        #levels {
-            background: linear-gradient(135deg, #02142e, #2f46c5);
-            color: white;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        option {
-            background-color: #02142e;
-            border: none;
-        }
     </style>
 </head>
 
